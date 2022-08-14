@@ -67,6 +67,11 @@ export const TaskInput = styled(BaseInput)`
     Faz com que ele caiba no espaço disponível, se adaptando caso necessário.
   */
   flex: 1;
+
+  // Removendo seta gerada pelo componente datalist
+  &::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
 `
 
 // Reaproveitando componente estilizado criado na linha 32
