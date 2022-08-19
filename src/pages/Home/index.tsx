@@ -101,17 +101,23 @@ export function Home() {
     reset()
   }
 
-  // Pega os minutos e transforma em segundos ou retorna zero caso nada esteja ativo
   const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
-  // Pega o total de segundos se algo estiver ativo e diminui dos segundos passados, ou retorna 0 se nada estiver ativo
   const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
 
-  // Minutos pode vir quebrado, então é necessário arredondamento para baixo para pegar os minutos (int)
+  /*
+    A quantidade de minutos é do tipo flutuante, dessa forma pode ser apresentada
+    com casas decimais que podem atrapalhar o sistema. Utilizando Math.floor é pos-
+    sivel arrendodar essa quantidade para baixo, atribuindo assim o resul-
+    tado dos minutos a uma variável, essa do tipo inteiro.
+  */
   const minutesAmount = Math.floor(currentSeconds / 60)
-  // Pegando o resto para ter em mãos os segundos
   const secondsAmount = currentSeconds % 60
 
-  // Garantindo que os valores sempre tenham 2 caracteres
+  /*
+    Este padStart garante que se o valor tiver menos de 2 caracteres, o mesmo receberá
+    um zero a sua esquerda, ou seja, é possível definir elementos o que uma string vai
+    receber com base na quantidade de caracteres que a mesma tem.
+  */
   const minutes = String(minutesAmount).padStart(2, '0')
   const seconds = String(secondsAmount).padStart(2, '0')
 
@@ -122,8 +128,8 @@ export function Home() {
   }, [minutes, seconds, activeCycle])
 
   /*
-    Observando o valor do input task em tempo real sem a necessidade do mesmos ser
-    um componente controlado. Isso melhora a performance da aplicação.
+    Watch é um observador do useForm. A ca mudança a variável task receberá o valor
+    atualizado do input.
   */
   const task = watch('task')
 
