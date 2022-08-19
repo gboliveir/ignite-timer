@@ -5,6 +5,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 // Importando todas as funções de validação de zod e atribuindo a uma unica variável. A lib Zod não temum export Default, por essa razão isso é necessário.
 import * as zod from 'zod'
+import { useState, useEffect } from 'react'
+import { differenceInSeconds } from 'date-fns'
+
 import {
   CountdownContainer,
   FormContainer,
@@ -41,7 +44,18 @@ const newCycleFormValidationSchema = zod.object({
 */
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
 
+interface Cycle {
+  id: string
+  task: string
+  minutesAmount: number
+  startDate: Date
+}
+
 export function Home() {
+  const [cycle, setCycle] = useState<Cycle[]>([])
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
+
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
@@ -50,10 +64,62 @@ export function Home() {
     },
   })
 
+  const activeCycle = cycle.find((cycle) => cycle.id === activeCycleId)
+
+  useEffect(() => {
+    let interval: number
+
+    if (activeCycle) {
+      interval = setInterval(() => {
+        setAmountSecondsPassed(
+          differenceInSeconds(new Date(), activeCycle.startDate),
+        )
+      }, 1000)
+    }
+
+    // Quando uma nova instancia do interval e criada, é necessário cancelar a anterior.
+    return () => {
+      clearInterval(interval)
+    }
+  }, [activeCycle])
+
   function handleCreateNewCycle(data: NewCycleFormData) {
-    console.log(data)
+    const id = String(new Date().getTime())
+
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+      startDate: new Date(),
+    }
+
+    // Sempre que precisa-se do estado mais atualizado (cycle), utiliza-se uma função para recolher o cycle em sí
+    setCycle((state) => [...state, newCycle])
+    setActiveCycleId(id)
+    setAmountSecondsPassed(0) // Resetando minutos de uma instância passada
+
     reset()
   }
+
+  // Pega os minutos e transforma em segundos ou retorna zero caso nada esteja ativo
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+  // Pega o total de segundos se algo estiver ativo e diminui dos segundos passados, ou retorna 0 se nada estiver ativo
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
+
+  // Minutos pode vir quebrado, então é necessário arredondamento para baixo para pegar os minutos (int)
+  const minutesAmount = Math.floor(currentSeconds / 60)
+  // Pegando o resto para ter em mãos os segundos
+  const secondsAmount = currentSeconds % 60
+
+  // Garantindo que os valores sempre tenham 2 caracteres
+  const minutes = String(minutesAmount).padStart(2, '0')
+  const seconds = String(secondsAmount).padStart(2, '0')
+
+  useEffect(() => {
+    if (activeCycle) {
+      document.title = `${minutes}:${seconds}`
+    }
+  }, [minutes, seconds, activeCycle])
 
   /*
     Observando o valor do input task em tempo real sem a necessidade do mesmos ser
@@ -98,11 +164,11 @@ export function Home() {
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
 
         <StartCountdownButton disabled={isSubmiteDisabled} type="submit">
