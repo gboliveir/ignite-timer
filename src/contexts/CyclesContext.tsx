@@ -15,7 +15,7 @@ interface Cycle {
 }
 
 interface CycleContextType {
-  cycle: Cycle[]
+  cycles: Cycle[]
   activeCycle: Cycle | undefined
   activeCycleId: string | null
   amountSecondsPassed: number
@@ -32,18 +32,18 @@ interface CycleContextProviderProps {
 }
 
 export function CyclesContextProvider({ children }: CycleContextProviderProps) {
-  const [cycle, setCycle] = useState<Cycle[]>([])
+  const [cycles, setCycles] = useState<Cycle[]>([])
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
 
-  const activeCycle = cycle.find((cycle) => cycle.id === activeCycleId)
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
   function setSecondsPassed(seconds: number) {
     setAmountSecondsPassed(seconds)
   }
 
   function markCurrentCycleAsFinished() {
-    setCycle((state) =>
+    setCycles((state) =>
       state.map((cycle) => {
         if (cycle.id === activeCycleId) {
           return { ...cycle, interruptedDate: new Date() }
@@ -65,13 +65,13 @@ export function CyclesContextProvider({ children }: CycleContextProviderProps) {
     }
 
     // Sempre que precisa-se do estado mais atualizado (cycle), utiliza-se uma função para recolher o cycle em sí
-    setCycle((state) => [...state, newCycle])
+    setCycles((state) => [...state, newCycle])
     setActiveCycleId(id)
     setAmountSecondsPassed(0) // Resetando minutos de uma instância passada
   }
 
   function interruptCurrentCycle() {
-    setCycle((state) =>
+    setCycles((state) =>
       state.map((cycle) => {
         if (cycle.id === activeCycleId) {
           return { ...cycle, interruptedDate: new Date() }
@@ -87,7 +87,7 @@ export function CyclesContextProvider({ children }: CycleContextProviderProps) {
   return (
     <CycleContext.Provider
       value={{
-        cycle,
+        cycles,
         activeCycle,
         activeCycleId,
         markCurrentCycleAsFinished,
